@@ -1,3 +1,4 @@
+#nga.py by ludoux
 # -*- coding: UTF-8 -*-
 import re
 import requests
@@ -10,10 +11,10 @@ import json
 
 #=============先修改
 headers = {
-    'User-agent': '__'}
+    'User-agent': '_____'}
 cookies = {
-    'ngaPassportUid': '__',
-    'ngaPassportCid': '__',
+    'ngaPassportUid': '____',
+    'ngaPassportCid': '___',
 }
 #=============先修改
 totalfloor = []  # int几层，int pid, str时间，str昵称，str内容，int赞数
@@ -78,7 +79,7 @@ def makefile():
     global localmaxfloor
     lastfloor = 0
     total = totalfloor[len(totalfloor)-1][0]
-    with open(('./%d/post.md' % tid), 'a', encoding='utf-8') as f:
+    with open(('./%s/post.md' % target), 'a', encoding='utf-8') as f:
         for onefloor in totalfloor:
             if localmaxfloor < int(onefloor[0]):
                 if onefloor[0] == 0:
@@ -100,8 +101,8 @@ def makefile():
                     url = url.replace('.medium.jpg', '')
                     filename = hashlib.md5(
                         bytes(url, encoding='utf-8')).hexdigest()[2:8] + url[-6:]
-                    if os.path.exists('./%d/%s' % (tid, filename)) == False:
-                        down(url, ('./%d/%s' % (tid, filename)))
+                    if os.path.exists('./%s/%s' % (target, filename)) == False:
+                        down(url, ('./%s/%s' % (target, filename)))
                         print('down:./%d/%s [%d/%d]' % (tid, filename, onefloor[0], total))
                     raw = raw.replace(('[img]%s[/img]' %
                                        ritem), ('![img](./%s)' % filename))
@@ -118,7 +119,7 @@ def makefile():
                     quotetext = ritem[2]
                     quotetext = quotetext.replace('\n', '\n>')
                     raw = raw.replace(re.search(r'\[quote\].+?\[uid=\d+\](.+?)\[/uid\] \((.+?)\)\:\[/b\](.+?)\[/quote\]',
-                                                raw, flags=re.S).group(), '>%s(%s) said:%s' % (ritem[0], ritem[1], quotetext))
+                                                raw, flags=re.S).group(), '>%s(%s) said:%s\n' % (ritem[0], ritem[1], quotetext))
 
                 f.write(("%s\n\n" % raw))
                 lastfloor = int(onefloor[0])
@@ -137,10 +138,27 @@ def down(url, path):
         print('Failed to down url:%s, path:%s' % (url, path))
         errortext = errortext + '<Failed to down url:%s, path:%s>' % (url, path)
 
+def get_title(tid):
+    params = (
+        ('tid', tid),
+        ('_ff', '-7'),
+        ('page', 1)
+    )
+    ss1 = requests.Session()
+    get = ss1.get('https://bbs.nga.cn/read.php', headers=headers,
+                  params=params, cookies=cookies)
+    get.encoding = 'GBK'
+    content = get.text
+    ##global title
+    title = re.search(r'<title>(.+?)</title>', content, flags=re.S).group(1)
+    return title
 
 def main():
     global tid
     tid = int(input('tid:'))
+    global target
+    title_cut=get_title(tid).rfind(' NGA玩家社区')
+    target=get_title(tid)[0:title_cut]
     holder()
     input('press to exit.')
 
@@ -150,10 +168,10 @@ def holder():
     global localmaxfloor
     global errortext
     print(tid)
-    if not os.path.exists(('./%d' % tid)):
-        os.mkdir(('./%d' % tid))
-    elif os.path.exists('./%d/max.txt' % tid):
-        with open('./%d/max.txt' % tid, 'r', encoding='utf-8') as f:
+    if not os.path.exists(('./%s' % target)):
+        os.mkdir(('./%s' % target))
+    elif os.path.exists('./%s/max.txt' % target):
+        with open('./%s/max.txt' % target, 'r', encoding='utf-8') as f:
             r = f.read()
             localmaxpage = int(r.split()[0])
             localmaxfloor = int(r.split()[1])
@@ -164,15 +182,15 @@ def holder():
         time.sleep(0.1)
         cpage = cpage + 1
 
-    with open(('./%d/max.txt' % tid), 'w', encoding='utf-8') as f:
+    with open(('./%s/max.txt' % target), 'w', encoding='utf-8') as f:
         f.write("%d %s" % (cpage, totalfloor[len(totalfloor) - 1][0]))
 
-    if os.path.exists('./%d/info.txt' % tid):
-        with open(('./%d/info.txt' % tid), 'a', encoding='utf-8') as f:
+    if os.path.exists('./%s/info.txt' % target):
+        with open(('./%s/info.txt' % target), 'a', encoding='utf-8') as f:
             f.write('[%s]%d %s\n' % (time.asctime(
                 time.localtime(time.time())), len(totalfloor), errortext))
     else:
-        with open(('./%d/info.txt' % tid), 'w', encoding='utf-8') as f:
+        with open(('./%s/info.txt' % target), 'w', encoding='utf-8') as f:
             f.write(
                 'tid:%d\ntitle:%s\n(c) ludoux https://github.com/ludoux/ngapost2md\n==========\n' % (tid, title))
             f.write(
