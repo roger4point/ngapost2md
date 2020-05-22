@@ -11,10 +11,10 @@ import json
 
 #=============先修改
 headers = {
-    'User-agent': '_____'}
+    'User-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36'}
 cookies = {
-    'ngaPassportUid': '____',
-    'ngaPassportCid': '___',
+    'ngaPassportUid': '60580951',
+    'ngaPassportCid': 'X8q2su1c9lqaoplsncfjm5mkuebtbavodr5969i0',
 }
 #=============先修改
 totalfloor = []  # int几层，int pid, str时间，str昵称，str内容，int赞数
@@ -79,7 +79,7 @@ def makefile():
     global localmaxfloor
     lastfloor = 0
     total = totalfloor[len(totalfloor)-1][0]
-    with open(('./%s/post.md' % target), 'a', encoding='utf-8') as f:
+    with open(('./%s/post.md' % name), 'a', encoding='utf-8') as f:
         for onefloor in totalfloor:
             if localmaxfloor < int(onefloor[0]):
                 if onefloor[0] == 0:
@@ -89,7 +89,7 @@ def makefile():
                 f.write("----\n##### %d.[%d] \<pid:%d\> %s by %s\n" %
                         (onefloor[0], onefloor[5], onefloor[1], onefloor[2], onefloor[3]))
                 raw = str(onefloor[4])
-
+                #0:楼层；1:pid（不知道是干什么用的）；2:时间；3：发言人；4:内容；5：赞数
                 raw = raw.replace('<br/>', '\n')  # 换行
                 raw = raw.replace('<br>', '\n')
 
@@ -101,8 +101,8 @@ def makefile():
                     url = url.replace('.medium.jpg', '')
                     filename = hashlib.md5(
                         bytes(url, encoding='utf-8')).hexdigest()[2:8] + url[-6:]
-                    if os.path.exists('./%s/%s' % (target, filename)) == False:
-                        down(url, ('./%s/%s' % (target, filename)))
+                    if os.path.exists('./%s/%s' % (name, filename)) == False:
+                        down(url, ('./%s/%s' % (name, filename)))
                         print('down:./%d/%s [%d/%d]' % (tid, filename, onefloor[0], total))
                     raw = raw.replace(('[img]%s[/img]' %
                                        ritem), ('![img](./%s)' % filename))
@@ -156,9 +156,10 @@ def get_title(tid):
 def main():
     global tid
     tid = int(input('tid:'))
-    global target
-    title_cut=get_title(tid).rfind(' NGA玩家社区')
-    target=get_title(tid)[0:title_cut]
+    #global target
+    global name
+    name = get_title(tid).replace(' NGA玩家社区','%s' %str(tid))
+    #target=get_title(tid)[0:title_cut]
     holder()
     input('press to exit.')
 
@@ -168,10 +169,21 @@ def holder():
     global localmaxfloor
     global errortext
     print(tid)
-    if not os.path.exists(('./%s' % target)):
-        os.mkdir(('./%s' % target))
-    elif os.path.exists('./%s/max.txt' % target):
-        with open('./%s/max.txt' % target, 'r', encoding='utf-8') as f:
+    path=os.getcwd()
+    #upath=unicode(path,'utf-8')
+    dirs=os.listdir(path)
+    flag_existence=0
+    for filenames in dirs:
+        #ufilenames=unicode(filenames,'utf-8')
+        if filenames.endswith('%s' % tid):
+            flag_existence=1
+            if filenames!=name:
+                os.rename(filenames,name)
+            break
+    if flag_existence==0:#not os.path.exists('./%s' % name):#
+        os.mkdir(('./%s' % name))
+    elif os.path.exists('./%s/max.txt' % name):
+        with open('./%s/max.txt' % name, 'r', encoding='utf-8') as f:
             r = f.read()
             localmaxpage = int(r.split()[0])
             localmaxfloor = int(r.split()[1])
@@ -182,15 +194,15 @@ def holder():
         time.sleep(0.1)
         cpage = cpage + 1
 
-    with open(('./%s/max.txt' % target), 'w', encoding='utf-8') as f:
+    with open(('./%s/max.txt' % name), 'w', encoding='utf-8') as f:
         f.write("%d %s" % (cpage, totalfloor[len(totalfloor) - 1][0]))
 
-    if os.path.exists('./%s/info.txt' % target):
-        with open(('./%s/info.txt' % target), 'a', encoding='utf-8') as f:
+    if os.path.exists('./%s/info.txt' % name):
+        with open(('./%s/info.txt' % name), 'a', encoding='utf-8') as f:
             f.write('[%s]%d %s\n' % (time.asctime(
                 time.localtime(time.time())), len(totalfloor), errortext))
     else:
-        with open(('./%s/info.txt' % target), 'w', encoding='utf-8') as f:
+        with open(('./%s/info.txt' % name), 'w', encoding='utf-8') as f:
             f.write(
                 'tid:%d\ntitle:%s\n(c) ludoux https://github.com/ludoux/ngapost2md\n==========\n' % (tid, title))
             f.write(
